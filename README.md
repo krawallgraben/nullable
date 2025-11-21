@@ -42,12 +42,3 @@ Das Projekt ist ein Maven-Projekt und benötigt Java 21.
 
 *   **Build:** `mvn clean package`
 *   **Tests:** `mvn test`
-*   **Dependency-Updates prüfen:** `mvn versions:display-dependency-updates`
-*   **Code-Formatierung:** Vor dem Commit `mvn spotless:apply` ausführen.
-
-## Konventionen
-
-*   Code und Dokumentation auf Deutsch (wo sinnvoll).
-*   Einfache, klare Sprache.
-*   Kein `Optional` verwenden.
-*   Trennung von Refactoring und Features.
