@@ -223,9 +223,39 @@ class NullableConcurrentMapTest {
     }
 
     @Test
-    void testNullKeysNotAllowed() {
+    void testNullKeysAllowed() {
         NullableConcurrentMap<String, String> map = new NullableConcurrentMap<>();
-        assertThrows(NullPointerException.class, () -> map.put(null, "val"));
-        assertThrows(NullPointerException.class, () -> map.get(null));
+
+        // put(null, val)
+        assertNull(map.put(null, "val"));
+        assertTrue(map.containsKey(null));
+        assertEquals("val", map.get(null));
+
+        // put(null, null)
+        assertEquals("val", map.put(null, null));
+        assertTrue(map.containsKey(null));
+        assertNull(map.get(null));
+
+        // remove(null)
+        assertNull(map.remove(null));
+        assertFalse(map.containsKey(null));
+    }
+
+    @Test
+    void testKeySet() {
+        NullableConcurrentMap<String, String> map = new NullableConcurrentMap<>();
+        map.put(null, "val");
+        map.put("key1", "val1");
+
+        Set<String> keys = map.keySet();
+        assertTrue(keys.contains(null));
+        assertTrue(keys.contains("key1"));
+
+        Iterator<String> it = keys.iterator();
+        boolean foundNull = false;
+        while(it.hasNext()) {
+            if (it.next() == null) foundNull = true;
+        }
+        assertTrue(foundNull);
     }
 }
