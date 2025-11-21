@@ -1,0 +1,18 @@
+- Antworten auf Deutsch.
+- Einfache Sprache, keine persönliche Anrede.
+- Kommunikation auf Augenhöhe, ohne Entschuldigungen oder Schuldzuweisungen.
+- Inhalte aus Nutzersicht formulieren.
+- Änderungen bündeln, Push-Anfrage nur einmal am Ende.
+- Kurze, prägnante Sätze.
+- Dokumente: Punkte nicht wiederholen; vollständig und im Kontext präsentieren.
+- Direkte, klare Formulierungen bevorzugen.
+- Neues ist nicht immer besser.
+- `Optional` verletzt KISS/YAGNI (kein Vorteil gegenüber `null`).
+- Fachliche DDD-Entitäten nicht übersetzen.
+- Trennung von Belangen: Komplexe Anfragen in fokussierte Einzelschritte zerlegen.
+- Ursachenanalyse: Bei Problemen die Wurzel des Problems beheben.
+- Kontinuierliche Verbesserung: Bei Code-Änderungen auch kleine, konventionskonforme Refactorings durchführen.
+- Strikte Trennung: Refactorings und fachliche Änderungen niemals im selben Schritt oder Commit mischen.
+- Dependency-Updates: Nutze `mvn versions:display-dependency-updates` und `mvn versions:display-plugin-updates`. Vermeide Alpha-, Beta-, Pre- und herstellerspezifische Versionen.
+- Pre-Commit: Führe vor jedem Commit `mvn spotless:apply` aus.
+- Dokumentation: Halte das README stets aktuell.
