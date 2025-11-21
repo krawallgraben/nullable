@@ -14,9 +14,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+@SuppressWarnings("serial")
 public class NullableConcurrentMap<K, V> extends ConcurrentHashMap<K, V> {
-
-    private static final long serialVersionUID = 1L;
 
     private enum NullPlaceholder {
         INSTANCE;
