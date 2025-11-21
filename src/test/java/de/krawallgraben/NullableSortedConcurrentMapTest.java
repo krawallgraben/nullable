@@ -1,13 +1,13 @@
 package de.krawallgraben;
 
-import org.junit.jupiter.api.Test;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.NavigableSet;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
 
 class NullableSortedConcurrentMapTest {
 
@@ -43,7 +43,8 @@ class NullableSortedConcurrentMapTest {
     void testCustomComparator() {
         // Reverse order comparator
         Comparator<String> reverse = Comparator.reverseOrder();
-        NullableSortedConcurrentMap<String, String> map = new NullableSortedConcurrentMap<>(reverse);
+        NullableSortedConcurrentMap<String, String> map =
+                new NullableSortedConcurrentMap<>(reverse);
 
         map.put("a", "valA");
         map.put(null, "valNull");
@@ -95,15 +96,46 @@ class NullableSortedConcurrentMapTest {
 
     @Test
     void testEntrySet() {
-         NullableSortedConcurrentMap<String, String> map = new NullableSortedConcurrentMap<>();
-         map.put(null, "valNull");
-         map.put("a", "valA");
+        NullableSortedConcurrentMap<String, String> map = new NullableSortedConcurrentMap<>();
+        map.put(null, "valNull");
+        map.put("a", "valA");
 
-         Set<Map.Entry<String, String>> entries = map.entrySet();
-         assertEquals(2, entries.size());
-         for (Map.Entry<String, String> e : entries) {
-             if (e.getKey() == null) assertEquals("valNull", e.getValue());
-             else assertEquals("valA", e.getValue());
-         }
+        Set<Map.Entry<String, String>> entries = map.entrySet();
+        assertEquals(2, entries.size());
+        for (Map.Entry<String, String> e : entries) {
+            if (e.getKey() == null) assertEquals("valNull", e.getValue());
+            else assertEquals("valA", e.getValue());
+        }
+    }
+
+    @Test
+    void testSubMap() {
+        NullableSortedConcurrentMap<String, String> map = new NullableSortedConcurrentMap<>();
+        map.put(null, "nullVal");
+        map.put("a", "aVal");
+        map.put("c", "cVal");
+
+        // HeadMap
+        Map<String, String> head = map.headMap("c");
+        assertEquals(2, head.size());
+        assertTrue(head.containsKey(null));
+        assertTrue(head.containsKey("a"));
+        assertFalse(head.containsKey("c"));
+
+        // TailMap
+        Map<String, String> tail = map.tailMap("a");
+        assertEquals(2, tail.size());
+        assertTrue(tail.containsKey("a"));
+        assertTrue(tail.containsKey("c"));
+        assertFalse(tail.containsKey(null));
+
+        // SubMap
+        Map<String, String> sub = map.subMap(null, "c"); // from null (inclusive) to c (exclusive)
+        assertEquals(2, sub.size());
+        assertTrue(sub.containsKey(null));
+        assertTrue(sub.containsKey("a"));
+
+        // Verify views are wrapped correctly (not exposing placeholders)
+        assertNull(head.keySet().iterator().next()); // First key should be null
     }
 }

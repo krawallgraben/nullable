@@ -1,12 +1,12 @@
 package de.krawallgraben;
 
-import org.junit.jupiter.api.Test;
-import java.util.Map;
-import java.util.Set;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.Collection;
 import java.util.Iterator;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Map;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
 
 class NullableConcurrentMapTest {
 
@@ -17,10 +17,13 @@ class NullableConcurrentMapTest {
         assertTrue(map.containsKey("key1"));
         assertNull(map.get("key1"));
 
-        assertNull(map.put("key1", "value1")); // Replaces null with "value1", returns old value (null)
+        assertNull(
+                map.put("key1", "value1")); // Replaces null with "value1", returns old value (null)
         assertEquals("value1", map.get("key1"));
 
-        assertEquals("value1", map.put("key1", null)); // Replaces "value1" with null, returns old value "value1"
+        assertEquals(
+                "value1",
+                map.put("key1", null)); // Replaces "value1" with null, returns old value "value1"
         assertNull(map.get("key1"));
     }
 
@@ -48,13 +51,17 @@ class NullableConcurrentMapTest {
         // Put something if absent (but it is present as null)
         // putIfAbsent returns current value. Current is null.
         // Does it update if current is null?
-        // Map.putIfAbsent: "If the specified key is not already associated with a value (or is mapped to null) associates it with the given value and returns null, else returns the current value."
-        // Wait. ConcurrentHashMap does NOT support null values. So "or is mapped to null" usually doesn't apply to it.
+        // Map.putIfAbsent: "If the specified key is not already associated with a value (or is
+        // mapped to null) associates it with the given value and returns null, else returns the
+        // current value."
+        // Wait. ConcurrentHashMap does NOT support null values. So "or is mapped to null" usually
+        // doesn't apply to it.
         // But here we are simulating nulls.
         // If we store PLACEHOLDER, the map thinks it IS associated with a value (PLACEHOLDER).
         // So super.putIfAbsent("key1", val) sees PLACEHOLDER and does NOTHING.
         // It returns PLACEHOLDER.
-        // So if we have mapped "key1" -> null (PLACEHOLDER), putIfAbsent("key1", "val") will return null and NOT update.
+        // So if we have mapped "key1" -> null (PLACEHOLDER), putIfAbsent("key1", "val") will return
+        // null and NOT update.
         // Let's verify if this is desired.
         // Standard Map: if mapped to null, it updates.
         // ConcurrentHashMap: never mapped to null.
@@ -64,10 +71,12 @@ class NullableConcurrentMapTest {
         // So it will NOT replace PLACEHOLDER.
         // This means: map.put("k", null); map.putIfAbsent("k", "val") -> leaves it as null.
         // Is this what we want?
-        // If we want "map das null werte enthalten kann", maybe we want it to behave like HashMap regarding nulls?
+        // If we want "map das null werte enthalten kann", maybe we want it to behave like HashMap
+        // regarding nulls?
         // If so, we'd need to override putIfAbsent logic more deeply.
         // But usually "NullableConcurrentMap" just means "I can store nulls".
-        // I will assert the behavior I implemented: it treats null (PLACEHOLDER) as a valid existing value.
+        // I will assert the behavior I implemented: it treats null (PLACEHOLDER) as a valid
+        // existing value.
 
         assertNull(map.putIfAbsent("key1", "newValue"));
         // It returns null (unmasked PLACEHOLDER).
@@ -94,7 +103,8 @@ class NullableConcurrentMapTest {
         NullableConcurrentMap<String, String> map = new NullableConcurrentMap<>();
 
         // Compute to null (should store null)
-        // Wait, my implementation of compute: if func returns null, it passes null to super -> removes.
+        // Wait, my implementation of compute: if func returns null, it passes null to super ->
+        // removes.
         // So compute("k", (k,v) -> null) REMOVES the mapping.
         // This is consistent with Map contract.
         map.put("key1", "val");
@@ -115,26 +125,27 @@ class NullableConcurrentMapTest {
 
     @Test
     void testComputeIfAbsent() {
-         NullableConcurrentMap<String, String> map = new NullableConcurrentMap<>();
-         // func returns null -> no mapping established (standard map behavior)
-         assertNull(map.computeIfAbsent("key1", k -> null));
-         assertFalse(map.containsKey("key1"));
+        NullableConcurrentMap<String, String> map = new NullableConcurrentMap<>();
+        // func returns null -> no mapping established (standard map behavior)
+        assertNull(map.computeIfAbsent("key1", k -> null));
+        assertFalse(map.containsKey("key1"));
 
-         // func returns value -> mapping established
-         assertEquals("val", map.computeIfAbsent("key1", k -> "val"));
-         assertEquals("val", map.get("key1"));
+        // func returns value -> mapping established
+        assertEquals("val", map.computeIfAbsent("key1", k -> "val"));
+        assertEquals("val", map.get("key1"));
 
-         // If key exists (as null), computeIfAbsent should NOT recompute?
-         // In HashMap: "If the specified key is not already associated with a value (or is mapped to null)..."
-         // So if mapped to null, it SHOULD recompute.
-         // In my impl: super.computeIfAbsent("key", func).
-         // super sees PLACEHOLDER. It thinks "key is associated with value".
-         // So it does NOT recompute.
-         // This diverges from HashMap behavior for null values.
-         // But it is consistent with "ConcurrentHashMap with a Null Object Pattern".
-         map.put("key2", null);
-         assertEquals(null, map.computeIfAbsent("key2", k -> "newVal"));
-         assertNull(map.get("key2"));
+        // If key exists (as null), computeIfAbsent should NOT recompute?
+        // In HashMap: "If the specified key is not already associated with a value (or is mapped to
+        // null)..."
+        // So if mapped to null, it SHOULD recompute.
+        // In my impl: super.computeIfAbsent("key", func).
+        // super sees PLACEHOLDER. It thinks "key is associated with value".
+        // So it does NOT recompute.
+        // This diverges from HashMap behavior for null values.
+        // But it is consistent with "ConcurrentHashMap with a Null Object Pattern".
+        map.put("key2", null);
+        assertEquals(null, map.computeIfAbsent("key2", k -> "newVal"));
+        assertNull(map.get("key2"));
     }
 
     @Test
@@ -150,10 +161,15 @@ class NullableConcurrentMapTest {
         // super sees PLACEHOLDER as old value.
         // func is called with (unmask(PLACEHOLDER), unmask(mask(val))) -> (null, val)
         // We return "merged".
-        assertEquals("merged", map.merge("key1", "val", (v1, v2) -> {
-            if (v1 == null) return "merged";
-            return v2;
-        }));
+        assertEquals(
+                "merged",
+                map.merge(
+                        "key1",
+                        "val",
+                        (v1, v2) -> {
+                            if (v1 == null) return "merged";
+                            return v2;
+                        }));
         assertEquals("merged", map.get("key1"));
     }
 
@@ -189,7 +205,7 @@ class NullableConcurrentMapTest {
 
         Iterator<String> it = values.iterator();
         int count = 0;
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             String v = it.next();
             if (v != null) assertEquals("val2", v);
             count++;
@@ -203,11 +219,12 @@ class NullableConcurrentMapTest {
         map.put("key1", null);
 
         final boolean[] foundNull = {false};
-        map.forEach((k, v) -> {
-            if ("key1".equals(k) && v == null) {
-                foundNull[0] = true;
-            }
-        });
+        map.forEach(
+                (k, v) -> {
+                    if ("key1".equals(k) && v == null) {
+                        foundNull[0] = true;
+                    }
+                });
         assertTrue(foundNull[0]);
     }
 
@@ -253,7 +270,7 @@ class NullableConcurrentMapTest {
 
         Iterator<String> it = keys.iterator();
         boolean foundNull = false;
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             if (it.next() == null) foundNull = true;
         }
         assertTrue(foundNull);

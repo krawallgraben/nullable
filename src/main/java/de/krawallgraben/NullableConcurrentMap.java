@@ -14,14 +14,31 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * A thread-safe map that allows `null` as keys and values.
+ *
+ * <p>This implementation uses a {@link ConcurrentHashMap} internally. `null` values are replaced by
+ * a placeholder internally. Externally, the map behaves like a standard map supporting `null`.
+ *
+ * <p>Methods like `keySet`, `values`, and `entrySet` return views that correctly represent `null`
+ * values.
+ *
+ * @param <K> the type of keys
+ * @param <V> the type of values
+ */
 @SuppressWarnings("serial")
 public class NullableConcurrentMap<K, V> implements ConcurrentMap<K, V>, Serializable {
 
     private final ConcurrentHashMap<Object, Object> internalMap;
 
+    /** Placeholder for `null`. */
     private enum NullPlaceholder {
         INSTANCE;
-        @Override public String toString() { return "null"; }
+
+        @Override
+        public String toString() {
+            return "null";
+        }
     }
 
     private static Object mask(Object value) {
@@ -161,41 +178,57 @@ public class NullableConcurrentMap<K, V> implements ConcurrentMap<K, V>, Seriali
 
     @Override
     public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-        return unmask(internalMap.computeIfAbsent(mask(key), k -> {
-            V result = mappingFunction.apply(unmask(k));
-            return result == null ? null : mask(result);
-            // Note: computeIfAbsent in Map says if func returns null, no mapping is recorded.
-            // In internalMap, if we return null, it does nothing.
-            // BUT we want to support null values.
-            // If func returns null, we want to store PLACEHOLDER?
-            // Map contract: "If the function returns null no mapping is recorded."
-            // So we return null here too.
-        }));
+        return unmask(
+                internalMap.computeIfAbsent(
+                        mask(key),
+                        k -> {
+                            V result = mappingFunction.apply(unmask(k));
+                            return result == null ? null : mask(result);
+                            // Note: computeIfAbsent in Map says if func returns null, no mapping is
+                            // recorded.
+                            // In internalMap, if we return null, it does nothing.
+                            // BUT we want to support null values.
+                            // If func returns null, we want to store PLACEHOLDER?
+                            // Map contract: "If the function returns null no mapping is recorded."
+                            // So we return null here too.
+                        }));
     }
 
     @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        return unmask(internalMap.computeIfPresent(mask(key), (k, v) -> {
-            V result = remappingFunction.apply(unmask(k), unmask(v));
-            return result == null ? null : mask(result);
-        }));
+    public V computeIfPresent(
+            K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        return unmask(
+                internalMap.computeIfPresent(
+                        mask(key),
+                        (k, v) -> {
+                            V result = remappingFunction.apply(unmask(k), unmask(v));
+                            return result == null ? null : mask(result);
+                        }));
     }
 
     @Override
     public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        return unmask(internalMap.compute(mask(key), (k, v) -> {
-            V result = remappingFunction.apply(unmask(k), unmask(v));
-            return result == null ? null : mask(result);
-        }));
+        return unmask(
+                internalMap.compute(
+                        mask(key),
+                        (k, v) -> {
+                            V result = remappingFunction.apply(unmask(k), unmask(v));
+                            return result == null ? null : mask(result);
+                        }));
     }
 
     @Override
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    public V merge(
+            K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         if (value == null) throw new NullPointerException();
-        return unmask(internalMap.merge(mask(key), mask(value), (v1, v2) -> {
-            V result = remappingFunction.apply(unmask(v1), unmask(v2));
-            return result == null ? null : mask(result);
-        }));
+        return unmask(
+                internalMap.merge(
+                        mask(key),
+                        mask(value),
+                        (v1, v2) -> {
+                            V result = remappingFunction.apply(unmask(v1), unmask(v2));
+                            return result == null ? null : mask(result);
+                        }));
     }
 
     // Views
@@ -362,8 +395,8 @@ public class NullableConcurrentMap<K, V> implements ConcurrentMap<K, V>, Seriali
         public boolean equals(Object o) {
             if (!(o instanceof Map.Entry)) return false;
             Map.Entry<?, ?> other = (Map.Entry<?, ?>) o;
-            return Objects.equals(getKey(), other.getKey()) &&
-                   Objects.equals(getValue(), other.getValue());
+            return Objects.equals(getKey(), other.getKey())
+                    && Objects.equals(getValue(), other.getValue());
         }
 
         @Override
