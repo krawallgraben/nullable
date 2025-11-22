@@ -1,3 +1,5 @@
+> **Note:** This documentation is written in German. Your browser should have no trouble translating it into your preferred language. :)
+
 # Nullable Concurrent Maps
 
 Dieses Projekt stellt thread-sichere Map-Implementierungen bereit, die `null` als Schlüssel und Wert unterstützen.
