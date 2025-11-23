@@ -1,3 +1,3 @@
 module de.krawallgraben.nullable {
-    exports de.krawallgraben;
+    exports de.krawallgraben.nullable;
 }

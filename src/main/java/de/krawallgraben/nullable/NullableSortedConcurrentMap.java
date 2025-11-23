@@ -1,4 +1,4 @@
-package de.krawallgraben;
+package de.krawallgraben.nullable;
 
 import java.io.Serializable;
 import java.util.AbstractCollection;
