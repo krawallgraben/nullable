@@ -1,0 +1,32 @@
+name: Release JAR
+
+on:
+  push:
+    tags:
+      - 'v*' # Feuert nur bei Tags wie v1.0.0, v1.0.1 etc.
+
+permissions:
+  contents: write # WICHTIG: Erlaubt der Action, Dateien ins Release hochzuladen
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Upload JAR to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
