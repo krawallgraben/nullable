@@ -30,7 +30,7 @@ Eine Erweiterung von `ConcurrentSkipListMap`.
 
 ## Verwendung
 
-Das Projekt ist ein Maven-Projekt und benötigt Java 21.
+Das Projekt baut ein MRJAR und benötigt mindestens Java 1.8
 
 ```xml
 <dependency>
