@@ -1,3 +1,5 @@
+> **Note:** This documentation is written in German. Your browser should have no trouble translating it into your preferred language. :)
+
 # Nullable Concurrent Maps
 
 Dieses Projekt stellt thread-sichere Map-Implementierungen bereit, die `null` als Schlüssel und Wert unterstützen.
@@ -42,3 +44,9 @@ Das Projekt ist ein Maven-Projekt und benötigt Java 21.
 
 *   **Build:** `mvn clean package`
 *   **Tests:** `mvn test`
+
+## Lizenz & Autor
+
+Copyright © Martin Kreutz.
+Dieses Projekt ist unter der Apache 2.0 Lizenz veröffentlicht.
+Co-Autor: Jules AI.

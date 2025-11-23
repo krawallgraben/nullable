@@ -1,4 +1,4 @@
-package de.krawallgraben;
+package de.krawallgraben.nullable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
