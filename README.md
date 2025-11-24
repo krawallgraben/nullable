@@ -33,11 +33,20 @@ Eine Erweiterung von `ConcurrentSkipListMap`.
 Das Projekt baut ein MRJAR und benötigt mindestens Java 1.8
 
 ```xml
+<repositories>
+		<repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</repository>
+	</repositories>
+```
+
+```xml
 <dependency>
-    <groupId>de.krawallgraben</groupId>
-    <artifactId>nullable</artifactId>
-    <version>1.0.0</version>
-</dependency>
+	    <groupId>com.github.krawallgraben</groupId>
+	    <artifactId>nullable</artifactId>
+	    <version>Tag</version>
+	</dependency>
 ```
 
 ## Entwicklung
