@@ -3,7 +3,7 @@ name: Release JAR
 on:
   push:
     tags:
-      - 'v*' # Feuert nur bei Tags wie v1.0.0, v1.0.1 etc.
+      - '[0-9]+.*' # <--- Reagiert auf 1.0.0, 2.1, etc.
 
 permissions:
   contents: write # WICHTIG: Erlaubt der Action, Dateien ins Release hochzuladen
