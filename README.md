@@ -54,14 +54,16 @@ Eine Implementierung von `Deque`, die intern eine `ConcurrentLinkedDeque` nutzt.
 *   Unterstützt `null` als Element.
 *   Kann als Queue oder Stack verwendet werden.
 
-### `NullableConcurrentList`
+### `FailFastThreadSafeList`
 
-Eine Implementierung von `List`, die intern eine `CopyOnWriteArrayList` nutzt.
+Eine einfache, thread-sichere Liste, die intern eine `ArrayList` nutzt.
 
 **Eigenschaften:**
-*   Thread-sicher.
+*   Thread-sicher durch Verwendung eines `ReentrantReadWriteLock`.
 *   Unterstützt `null` als Element.
-*   **Wichtig:** Schreiboperationen sind teuer (blocking copy), Leseoperationen sind schnell und nicht blockierend.
+*   **Wichtig:** Der Iterator ist *fail-fast* und nicht thread-sicher. Er iteriert direkt über die interne `ArrayList`.
+*   Iterationen müssen im aufrufenden Code bei Bedarf selbst synchronisiert werden oder es muss in Kauf genommen werden, dass eine `ConcurrentModificationException` fliegt, wenn während der Iteration geschrieben wird.
+*   Lese- und Schreiboperationen (`get`, `add`, `remove`, `size`) sind durch Locks geschützt.
 
 ## Verwendung
 

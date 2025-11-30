@@ -162,7 +162,8 @@ class NullableConcurrentMapTest {
         // Map.merge: "If the specified value is null... throws NPE". We relax this.
         // If result is null, we remove.
         // So merge(key, null, ...) -> removes mapping if it existed?
-        // Wait, "If the specified key is not already associated with a value or is associated with null, associates it with the given non-null value."
+        // Wait, "If the specified key is not already associated with a value or is associated with
+        // null, associates it with the given non-null value."
         // Our logic: "newValue = value". If value is null, newValue is null.
         // Then we store `mask(newValue)` if it's not null.
         // If newValue IS null, we remove?
@@ -182,7 +183,8 @@ class NullableConcurrentMapTest {
 
         // Now merge where value is NOT null
         map.put("key1", null);
-        // Standard Map behavior: if key is mapped to null, merge replaces it directly without calling the remapping function.
+        // Standard Map behavior: if key is mapped to null, merge replaces it directly without
+        // calling the remapping function.
         // So we expect "val", not "merged".
         assertEquals(
                 "val",
@@ -199,10 +201,13 @@ class NullableConcurrentMapTest {
         map.put("key3", "old");
         // merge(key, null, func)
         // Code: oldVal="old". newValue = func(oldVal, value) = func("old", null).
-        map.merge("key3", null, (v1, v2) -> {
-             if (v2 == null) return "kept";
-             return "replaced";
-        });
+        map.merge(
+                "key3",
+                null,
+                (v1, v2) -> {
+                    if (v2 == null) return "kept";
+                    return "replaced";
+                });
         assertEquals("kept", map.get("key3"));
     }
 
