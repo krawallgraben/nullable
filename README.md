@@ -7,10 +7,11 @@ Standardmäßige Concurrent-Collections in Java (wie `ConcurrentHashMap` oder `C
 
 ## Philosophie
 
-Wir betrachten `null` als einen vollwertigen Status, der fachlich "kein Wert" oder "abwesend" bedeutet. Dies ist ein Standardfall und kein Fehler.
+`null` ist ein vollwertiger Status, der fachlich "kein Wert" oder "abwesend" bedeutet. Dies ist ein Standardfall und kein Fehler.
 
-*   **Keine UnsupportedOperationException:** Methoden sollten das tun, was von ihnen erwartet wird, oder `null` zurückgeben, wenn ein Wert nicht vorhanden ist. Das Werfen einer `UnsupportedOperationException` ist ein Anti-Pattern und sollte in unseren Implementierungen nicht auftreten.
-*   **Null > Optional:** Wir bevorzugen `null` gegenüber `Optional`. `Optional` ist oft nur ein Versuch, `NullPointerException`s zu vermeiden, anstatt den Code robust gegen `null` zu machen. Unsere Implementierungen sind darauf ausgelegt, `null` sicher zu handhaben (KISS / YAGNI).
+*   **Keine UnsupportedOperationException:** Methoden sollten das tun, was von ihnen erwartet wird, oder `null` zurückgeben, wenn ein Wert nicht vorhanden ist. Das Werfen einer `UnsupportedOperationException` ist ein Anti-Pattern.
+*   **Null > Optional:** `null` ist `Optional` vorzuziehen. `Optional` dient oft nur der Vermeidung von `NullPointerException`s, anstatt Code robust gegen `null` zu gestalten (KISS / YAGNI).
+*   **Non-Blocking:** Blockierende Queues werden nicht unterstützt. Die Begrenzung von Ressourcen durch Blockieren deutet auf Designschwächen hin. Überlast und Ausfälle sind durch *Circuit Breaker* zu behandeln.
 
 ## Klassen
 
