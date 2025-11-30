@@ -1,9 +1,9 @@
 > **Note:** This documentation is written in German. Your browser should have no trouble translating it into your preferred language. :)
 
-# Nullable Concurrent Maps
+# Nullable Concurrent Collections
 
-Dieses Projekt stellt thread-sichere Map-Implementierungen bereit, die `null` als Schlüssel und Wert unterstützen.
-Standardmäßige Concurrent-Maps in Java (wie `ConcurrentHashMap`) erlauben kein `null`.
+Dieses Projekt stellt thread-sichere Collection-Implementierungen bereit, die `null` als Element, Schlüssel oder Wert unterstützen.
+Standardmäßige Concurrent-Collections in Java (wie `ConcurrentHashMap` oder `ConcurrentLinkedQueue`) erlauben oft kein `null`.
 
 ## Klassen
 
@@ -27,6 +27,33 @@ Eine Erweiterung von `ConcurrentSkipListMap`.
 *   Unterstützt `null` als Key und Value.
 *   `null`-Keys werden immer an den Anfang sortiert.
 *   Verwendet intern einen Wrapper-Comparator.
+
+### `NullableConcurrentQueue`
+
+Eine Implementierung von `Queue`, die intern eine `ConcurrentLinkedQueue` nutzt.
+
+**Eigenschaften:**
+*   Thread-sicher (nicht blockierend).
+*   Unterstützt `null` als Element.
+*   `null`-Werte werden intern maskiert.
+
+### `NullableConcurrentDeque`
+
+Eine Implementierung von `Deque`, die intern eine `ConcurrentLinkedDeque` nutzt.
+
+**Eigenschaften:**
+*   Thread-sicher (nicht blockierend).
+*   Unterstützt `null` als Element.
+*   Kann als Queue oder Stack verwendet werden.
+
+### `NullableConcurrentList`
+
+Eine Implementierung von `List`, die intern eine `CopyOnWriteArrayList` nutzt.
+
+**Eigenschaften:**
+*   Thread-sicher.
+*   Unterstützt `null` als Element.
+*   **Wichtig:** Schreiboperationen sind teuer (blocking copy), Leseoperationen sind schnell und nicht blockierend.
 
 ## Verwendung
 
