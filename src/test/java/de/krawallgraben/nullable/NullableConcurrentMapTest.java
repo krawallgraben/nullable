@@ -153,16 +153,39 @@ class NullableConcurrentMapTest {
         NullableConcurrentMap<String, String> map = new NullableConcurrentMap<>();
         map.put("key1", null);
 
-        // Merge with null value -> NPE (standard Map behavior for merge input)
-        assertThrows(NullPointerException.class, () -> map.merge("key1", null, (v1, v2) -> v2));
+        // Merge with null value -> should now work nicely instead of NPE
+        // Logic: old=null, new=null.
+        // If remapping func is called? No, if old is null, standard merge replaces it with value.
+        // But if value is null?
+        // Our modified logic: if old is null, newValue = value (which is null).
+        // newValue == null -> remove or store?
+        // Map.merge: "If the specified value is null... throws NPE". We relax this.
+        // If result is null, we remove.
+        // So merge(key, null, ...) -> removes mapping if it existed?
+        // Wait, "If the specified key is not already associated with a value or is associated with null, associates it with the given non-null value."
+        // Our logic: "newValue = value". If value is null, newValue is null.
+        // Then we store `mask(newValue)` if it's not null.
+        // If newValue IS null, we remove?
+        // Let's see the code:
+        // return newValue == null ? null : mask(newValue);
+        // And we pass this to compute.
+        // compute returns null -> removes.
+        // So merge(key, null) -> remove(key).
 
-        // Merge existing null with new value
-        // super.merge(key, mask(val), func)
-        // super sees PLACEHOLDER as old value.
-        // func is called with (unmask(PLACEHOLDER), unmask(mask(val))) -> (null, val)
-        // We return "merged".
+        map.merge("key1", null, (v1, v2) -> "shouldNotBeCalled");
+        // Logic check: oldVal=null. newValue=value=null. Result null. compute removes.
+        assertFalse(map.containsKey("key1"));
+
+        // Now test where key doesn't exist
+        map.merge("key2", null, (v1, v2) -> "shouldNotBeCalled");
+        assertFalse(map.containsKey("key2"));
+
+        // Now merge where value is NOT null
+        map.put("key1", null);
+        // Standard Map behavior: if key is mapped to null, merge replaces it directly without calling the remapping function.
+        // So we expect "val", not "merged".
         assertEquals(
-                "merged",
+                "val",
                 map.merge(
                         "key1",
                         "val",
@@ -170,7 +193,17 @@ class NullableConcurrentMapTest {
                             if (v1 == null) return "merged";
                             return v2;
                         }));
-        assertEquals("merged", map.get("key1"));
+        assertEquals("val", map.get("key1"));
+
+        // Merge where old is not null, and new is null
+        map.put("key3", "old");
+        // merge(key, null, func)
+        // Code: oldVal="old". newValue = func(oldVal, value) = func("old", null).
+        map.merge("key3", null, (v1, v2) -> {
+             if (v2 == null) return "kept";
+             return "replaced";
+        });
+        assertEquals("kept", map.get("key3"));
     }
 
     @Test

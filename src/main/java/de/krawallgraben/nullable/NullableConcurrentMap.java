@@ -220,14 +220,20 @@ public class NullableConcurrentMap<K, V> implements ConcurrentMap<K, V>, Seriali
     @Override
     public V merge(
             K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-        if (value == null) throw new NullPointerException();
+        // Use compute to simulate merge, as internalMap.merge throws NPE for null values.
         return unmask(
-                internalMap.merge(
+                internalMap.compute(
                         mask(key),
-                        mask(value),
-                        (v1, v2) -> {
-                            V result = remappingFunction.apply(unmask(v1), unmask(v2));
-                            return result == null ? null : mask(result);
+                        (k, oldVal) -> {
+                            V oldValue = unmask(oldVal);
+                            V newValue;
+                            if (oldValue == null) {
+                                newValue = value;
+                            } else {
+                                newValue = remappingFunction.apply(oldValue, value);
+                            }
+
+                            return newValue == null ? null : mask(newValue);
                         }));
     }
 

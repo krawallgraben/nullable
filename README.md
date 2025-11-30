@@ -5,6 +5,13 @@
 Dieses Projekt stellt thread-sichere Collection-Implementierungen bereit, die `null` als Element, Schlüssel oder Wert unterstützen.
 Standardmäßige Concurrent-Collections in Java (wie `ConcurrentHashMap` oder `ConcurrentLinkedQueue`) erlauben oft kein `null`.
 
+## Philosophie
+
+Wir betrachten `null` als einen vollwertigen Status, der fachlich "kein Wert" oder "abwesend" bedeutet. Dies ist ein Standardfall und kein Fehler.
+
+*   **Keine UnsupportedOperationException:** Methoden sollten das tun, was von ihnen erwartet wird, oder `null` zurückgeben, wenn ein Wert nicht vorhanden ist. Das Werfen einer `UnsupportedOperationException` ist ein Anti-Pattern und sollte in unseren Implementierungen nicht auftreten.
+*   **Null > Optional:** Wir bevorzugen `null` gegenüber `Optional`. `Optional` ist oft nur ein Versuch, `NullPointerException`s zu vermeiden, anstatt den Code robust gegen `null` zu machen. Unsere Implementierungen sind darauf ausgelegt, `null` sicher zu handhaben (KISS / YAGNI).
+
 ## Klassen
 
 ### `NullableConcurrentMap`
