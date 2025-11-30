@@ -375,15 +375,16 @@ public class NullableSortedConcurrentMap<K, V>
     @Override
     public V merge(
             K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-        if (value == null) throw new NullPointerException();
-        return unmask(
-                internalMap.merge(
-                        mask(key),
-                        mask(value),
-                        (v1, v2) -> {
-                            V result = remappingFunction.apply(unmask(v1), unmask(v2));
-                            return result == null ? null : mask(result);
-                        }));
+        return unmask(internalMap.compute(mask(key), (k, oldVal) -> {
+            V oldValue = unmask(oldVal);
+            V newValue;
+            if (oldValue == null) {
+                newValue = value;
+            } else {
+                newValue = remappingFunction.apply(oldValue, value);
+            }
+            return newValue == null ? null : mask(newValue);
+        }));
     }
 
     // Helper methods and classes
