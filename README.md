@@ -54,14 +54,16 @@ Eine Implementierung von `Deque`, die intern eine `ConcurrentLinkedDeque` nutzt.
 *   Unterstützt `null` als Element.
 *   Kann als Queue oder Stack verwendet werden.
 
-### `NullableConcurrentList`
+### `RobustValueIteratorList`
 
-Eine Implementierung von `List`, die intern eine `CopyOnWriteArrayList` nutzt.
+Eine thread-sichere Liste, die Robustheit der Iteration über Geschwindigkeit stellt.
 
 **Eigenschaften:**
-*   Thread-sicher.
+*   Thread-sicher durch Verwendung eines `ReentrantReadWriteLock`.
 *   Unterstützt `null` als Element.
-*   **Wichtig:** Schreiboperationen sind teuer (blocking copy), Leseoperationen sind schnell und nicht blockierend.
+*   **Robuster Iterator:** Der Iterator versucht bei Änderungen an der Liste, die Position logisch wiederherzustellen (basierend auf dem zuletzt gelesenen Wert und dessen Vorkommenshäufigkeit).
+*   **Performance:** Schreib-/Leseoperationen (`add`, `remove`, `get`) sind effizient, aber die Iteration ist teuer (O(N²)), da bei jedem Schritt der Kontext neu berechnet wird.
+*   Wirft `ConcurrentModificationException` nur, wenn eine logische Wiederherstellung der Position unmöglich ist (z.B. wenn das aktuelle Element gelöscht wurde).
 
 ## Verwendung
 
