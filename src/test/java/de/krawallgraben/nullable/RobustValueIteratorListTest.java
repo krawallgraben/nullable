@@ -49,36 +49,13 @@ class RobustValueIteratorListTest {
 
         // Modify list: Add "C" at the end.
         // List: [A, B, C]
-        // Iterator state: lastReturned="A", occurrence=1.
-        // Recovery: Finds 1st "A" at index 0. Cursor becomes 1.
-        // Next should be list.get(1) -> "B".
+        // Iterator state: lastReturned="A".
+        // Recovery check: list.get(0) == "A". Match.
+        // Should continue.
         list.add("C");
 
         assertEquals("B", it.next());
         assertEquals("C", it.next());
-    }
-
-    @Test
-    void testRecovery_AdditionBeforeCursor() {
-        // This is tricky. If we add before cursor, indices shift.
-        // But our recovery looks for "Last Returned Value" and sets cursor to "Index + 1".
-
-        RobustValueIteratorList<String> list = new RobustValueIteratorList<>();
-        list.add("A"); // 0
-        list.add("B"); // 1
-
-        Iterator<String> it = list.iterator();
-        assertEquals("A", it.next()); // Cursor 1. Last: "A", occ: 1.
-
-        // Modify: Insert "X" at 0. (We don't have insert at index, but let's simulate via internal
-        // list access?
-        // No, we only have add(T) which appends, or remove(index).
-        // Wait, the class only has add(T) (append) and remove(int).
-        // So we can't easily add *before* cursor unless we implement add(index, element).
-        // The user provided class only has `add(T element)` and `remove(int index)`.
-        // So we can only append.
-
-        // Let's test REMOVAL before cursor.
     }
 
     @Test
@@ -91,7 +68,7 @@ class RobustValueIteratorListTest {
         Iterator<String> it = list.iterator();
         assertEquals("X", it.next());
         assertEquals("A", it.next());
-        // Cursor at 2 (pointing to B). Last: "A", occ: 1.
+        // Cursor at 2 (pointing to B). Last: "A".
 
         // Remove "X" (index 0).
         // List: [A, B].
@@ -99,7 +76,8 @@ class RobustValueIteratorListTest {
         list.remove(0);
 
         // Next call:
-        // Recovery: Finds 1st "A" at index 0.
+        // Recovery check: list.get(1) -> "B". Last: "A". Mismatch.
+        // Recovery scan: Find "A". Found at 0.
         // Cursor becomes 0 + 1 = 1.
         // Next is list.get(1) -> "B". Correct.
 
@@ -115,13 +93,14 @@ class RobustValueIteratorListTest {
 
         Iterator<String> it = list.iterator();
         assertEquals("A", it.next());
-        // Cursor 1 (B). Last: "A", occ: 1.
+        // Cursor 1 (B). Last: "A".
 
         // Remove "C" (index 2).
         // List: [A, B].
         list.remove(2);
 
-        // Recovery: Finds 1st "A" at index 0. Cursor 1.
+        // Recovery check: list.get(0) -> "A". Match.
+        // Continue.
         // Next: list.get(1) -> "B".
         assertEquals("B", it.next());
         assertFalse(it.hasNext());
@@ -139,19 +118,24 @@ class RobustValueIteratorListTest {
         assertEquals("A", it.next());
         assertEquals("B", it.next());
         assertEquals("A", it.next());
-        // Cursor 3 (C). Last: "A", occ: 2 (it was the 2nd A).
+        // Cursor 3 (C). Last: "A" (the 2nd one).
 
         // Remove "B" (index 1).
         // List: [A, A, C].
         list.remove(1);
 
         // Recovery:
-        // Current list: A(0), A(1), C(2).
-        // We look for 2nd "A". It is at index 1.
-        // Cursor becomes 1 + 1 = 2.
-        // Next: list.get(2) -> "C".
+        // Check: list.get(2) -> "C". Last "A". Mismatch.
+        // Recovery Scan: Find "A".
+        // Finds first "A" at index 0.
+        // Cursor becomes 0 + 1 = 1.
+        // Next: list.get(1) -> "A" (The second A).
+
+        // Note: The behavior changed from seeing "C" to seeing "A" then "C".
+        // This is due to losing "occurrence count" tracking for performance.
 
         assertTrue(it.hasNext());
+        assertEquals("A", it.next());
         assertEquals("C", it.next());
     }
 
@@ -162,21 +146,21 @@ class RobustValueIteratorListTest {
         list.add("B");
 
         Iterator<String> it = list.iterator();
-        assertEquals("A", it.next()); // Last: "A", occ: 1.
+        assertEquals("A", it.next()); // Last: "A".
 
         // Remove "A"
         list.remove(0); // List: [B]
 
         // Recovery:
-        // Total count of "A" is 0.
-        // Last occurrence was 1.
-        // 0 < 1 -> CME.
+        // Check: list.get(0) -> "B". Last "A". Mismatch.
+        // Scan: Find "A". Not found.
+        // CME.
 
         assertThrows(ConcurrentModificationException.class, it::next);
     }
 
     @Test
-    void testRecoveryFailure_PreviousInstanceDeleted() {
+    void testRecovery_PreviousInstanceDeleted_SurvivableNow() {
         RobustValueIteratorList<String> list = new RobustValueIteratorList<>();
         list.add("A"); // 1st A
         list.add("B");
@@ -187,19 +171,22 @@ class RobustValueIteratorListTest {
         assertEquals("A", it.next());
         assertEquals("B", it.next());
         assertEquals("A", it.next());
-        // Cursor 3 (C). Last: "A", occ: 2.
+        // Cursor 3 (C). Last: "A".
 
         // Remove 1st "A" (index 0).
         // List: [B, A, C].
         list.remove(0);
 
         // Recovery:
-        // Total count of "A" is 1.
-        // Last occurrence was 2.
-        // 1 < 2 -> CME.
-        // Because the "2nd A" no longer exists as the "2nd A", it became the "1st A".
-        // The iterator assumes we missed/deleted the one we just returned or one before it.
+        // Check: list.get(2) -> "C". Last "A". Mismatch.
+        // Scan: Find "A". Found at index 1.
+        // Cursor becomes 1 + 1 = 2.
+        // Next: list.get(2) -> "C".
 
-        assertThrows(ConcurrentModificationException.class, it::next);
+        // Previously this threw CME because occurrence count mismatch.
+        // Now it survives because we just look for *any* A.
+        // It correctly finds the remaining A and continues.
+
+        assertEquals("C", it.next());
     }
 }

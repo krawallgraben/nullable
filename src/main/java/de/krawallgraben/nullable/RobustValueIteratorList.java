@@ -14,9 +14,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * its position if the underlying list changes, based on the value and occurrence count of the last
  * returned element.
  *
- * <p><strong>Performance Note:</strong> While read/write operations (get, add, remove) are fast
- * (O(1) or O(N) for remove), the iteration is expensive (O(N^2)) because it recalculates position
- * context on every step. Use this only when iteration robustness is more important than speed.
+ * <p><strong>Performance Note:</strong> The iteration logic tries to be cheap if the position of
+ * the last returned element is still valid (contains the same value). Otherwise, it scans to
+ * recover the position. This avoids O(N^2) complexity in the common case.
  *
  * @param <T> the type of elements in this list
  */
@@ -68,7 +68,7 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
         }
     }
 
-    // --- The intelligent, "expensive" Iterator ---
+    // --- The intelligent iterator ---
 
     @Override
     public Iterator<T> iterator() {
@@ -82,7 +82,6 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
         // State for recovery
         private long expectedModCount;
         private T lastReturnedValue = null;
-        private int lastValueOccurrence = 0; // "Which occurrence of 'A' was it?"
         private boolean hasStarted = false;
 
         ValueTrackingIterator() {
@@ -95,7 +94,7 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
             try {
                 // If changed: try to repair the position logically
                 if (modCount != expectedModCount) {
-                    recoverPosition();
+                    checkAndRecoverPosition();
                 }
                 return cursor < list.size();
             } finally {
@@ -109,7 +108,7 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
             try {
                 // 1. Check for change & Repair
                 if (modCount != expectedModCount) {
-                    recoverPosition();
+                    checkAndRecoverPosition();
                 }
 
                 if (cursor >= list.size()) {
@@ -119,12 +118,9 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
                 // 2. Get value
                 T currentValue = list.get(cursor);
 
-                // 3. Calculate metadata for next time (The "expensive" part)
-                // We need to know: Which occurrence of this value is it up to here?
-                // This costs O(cursor).
-                calculateOccurrenceStats(currentValue, cursor);
+                this.lastReturnedValue = currentValue;
 
-                // 4. Advance cursor
+                // 3. Advance cursor
                 cursor++;
                 hasStarted = true;
 
@@ -135,24 +131,8 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
             }
         }
 
-        /** Calculates which duplicate we currently have. */
-        private void calculateOccurrenceStats(T value, int currentIndex) {
-            int occurrence = 0;
-            // Scan from 0 to current index
-            for (int i = 0; i <= currentIndex; i++) {
-                if (Objects.equals(list.get(i), value)) {
-                    occurrence++;
-                }
-            }
-            this.lastReturnedValue = value;
-            this.lastValueOccurrence = occurrence;
-        }
-
-        /**
-         * Called when modCount doesn't match. Tries to reset cursor based on "Value + n-th
-         * repetition".
-         */
-        private void recoverPosition() {
+        /** Called when modCount doesn't match. Tries to validate position or recover. */
+        private void checkAndRecoverPosition() {
             if (!hasStarted) {
                 // If not started yet, simply reset
                 cursor = 0;
@@ -160,43 +140,40 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
                 return;
             }
 
-            // A. Count how often the value exists NOW in the list
-            int totalCountNow = 0;
-            for (T item : list) {
-                if (Objects.equals(item, lastReturnedValue)) {
-                    totalCountNow++;
+            // Optimization: If the value at the position where we expect the last returned value
+            // is still the same, we assume we are good.
+            // The last returned value was at 'cursor - 1'.
+            int lastIndex = cursor - 1;
+            if (lastIndex >= 0 && lastIndex < list.size()) {
+                if (Objects.equals(list.get(lastIndex), lastReturnedValue)) {
+                    // Optimization: We are likely still aligned.
+                    expectedModCount = modCount;
+                    return;
                 }
             }
 
-            // B. "If it occurs less often, it is broken"
-            if (totalCountNow < lastValueOccurrence) {
-                throw new ConcurrentModificationException(
-                        "Element "
-                                + lastReturnedValue
-                                + " was deleted (or instances before it). Recovery impossible.");
-            }
+            // Fallback: We need to find where 'lastReturnedValue' went.
+            // Since we don't track occurrence count anymore to save O(N^2) cost,
+            // we do a best-effort recovery: find the first occurrence of the value.
 
-            // C. Optimistic assumption: We look for the n-th occurrence again
             int foundAtIndex = -1;
-            int currentOccurrence = 0;
 
             for (int i = 0; i < list.size(); i++) {
                 if (Objects.equals(list.get(i), lastReturnedValue)) {
-                    currentOccurrence++;
-                    if (currentOccurrence == lastValueOccurrence) {
-                        foundAtIndex = i;
-                        break;
-                    }
+                    foundAtIndex = i;
+                    // We take the first one we find. This is a behavior change from O(N^2) version
+                    // but necessary for performance.
+                    break;
                 }
             }
 
-            // D. Set new cursor: We want the element AFTER it next
+            // Set new cursor: We want the element AFTER it next
             if (foundAtIndex != -1) {
                 cursor = foundAtIndex + 1;
                 expectedModCount = modCount; // Accept change
             } else {
-                // Should theoretically be caught by Check B, but for safety:
-                throw new ConcurrentModificationException("Critical error during recovery.");
+                throw new ConcurrentModificationException(
+                        "Element " + lastReturnedValue + " was deleted. Recovery impossible.");
             }
         }
     }
