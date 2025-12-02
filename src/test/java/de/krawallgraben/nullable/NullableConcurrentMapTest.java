@@ -174,12 +174,14 @@ class NullableConcurrentMapTest {
         // So merge(key, null) -> remove(key).
 
         map.merge("key1", null, (v1, v2) -> "shouldNotBeCalled");
-        // Logic check: oldVal=null. newValue=value=null. Result null. compute removes.
-        assertFalse(map.containsKey("key1"));
+        // Logic check: oldVal=null. newValue=value=null. But we treat value=null as valid.
+        assertTrue(map.containsKey("key1"));
+        assertNull(map.get("key1"));
 
         // Now test where key doesn't exist
         map.merge("key2", null, (v1, v2) -> "shouldNotBeCalled");
-        assertFalse(map.containsKey("key2"));
+        assertTrue(map.containsKey("key2"));
+        assertNull(map.get("key2"));
 
         // Now merge where value is NOT null
         map.put("key1", null);

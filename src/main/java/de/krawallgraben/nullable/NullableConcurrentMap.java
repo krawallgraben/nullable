@@ -226,13 +226,15 @@ public class NullableConcurrentMap<K, V> implements ConcurrentMap<K, V>, Seriali
                         mask(key),
                         (k, oldVal) -> {
                             V oldValue = unmask(oldVal);
-                            V newValue;
+                            // Merge spec: if old value is null (or missing), use provided value.
                             if (oldValue == null) {
-                                newValue = value;
-                            } else {
-                                newValue = remappingFunction.apply(oldValue, value);
+                                return mask(value);
                             }
 
+                            // If old value exists and is not null, call function.
+                            V newValue = remappingFunction.apply(oldValue, value);
+                            // If func returns null, we remove (return null).
+                            // If func returns value, we store mask(value).
                             return newValue == null ? null : mask(newValue);
                         }));
     }
