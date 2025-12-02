@@ -90,6 +90,7 @@ Das Projekt baut ein MRJAR und benötigt mindestens Java 1.8
 
 *   **Build:** `mvn clean package`
 *   **Tests:** `mvn test`
+*   **Performance:** [Performance Analyse](performance.md)
 
 ## Lizenz & Autor
 
