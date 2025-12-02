@@ -48,5 +48,32 @@ Gemessen wurde mit JMH (Java Microbenchmark Harness) auf einer Standard-Umgebung
 
 *   **Analyse:** Die Performance ist vergleichbar mit der `ConcurrentLinkedQueue`. Der Overhead für die Null-Unterstützung ist vernachlässigbar.
 
+## Globaler Vergleich (Basis: ArrayList = 100%)
+
+Diese Tabelle setzt alle getesteten Collection-Typen in Relation zur `ArrayList`. Da Maps (Key-Value) komplexer sind als Listen (Value), ist der Vergleich teils nicht direkt möglich, zeigt aber die Größenordnung der Kosten für Thread-Sicherheit und komplexere Strukturen.
+
+*   **Basis:** `ArrayList` (JCL Standard) ist immer 100%.
+*   **Werte:** Prozentuale Laufzeit (höher = langsamer).
+
+| Typ | Implementierung | Write (Add/Put) | Read (Get) | Iterate |
+| :--- | :--- | :---: | :---: | :---: |
+| **List** | `ArrayList` (Ref) | **100%** | **100%** | **100%** |
+| | `CopyOnWriteArrayList` | ~14800% | 922% | 100% |
+| | `RobustValueIteratorList` (Project) | ~1050% | 12200% | 4180% |
+| **Map** | `HashMap` | 330% | 2900% | 390% |
+| | `ConcurrentHashMap` | 900% | 3200% | 620% |
+| | `NullableConcurrentMap` (Project) | 920% | 3500% | 1290% |
+| **SortedMap** | `TreeMap` | 4200% | 53000% | 990% |
+| | `ConcurrentSkipListMap` | 7200% | 100000% | 210% |
+| | `NullableSortedConcurrentMap` (Project) | 10800% | 120000% | 1000% |
+| **Queue** | `LinkedList` | 255% | - | 310% |
+| | `ConcurrentLinkedQueue` | 475% | - | 530% |
+| | `NullableConcurrentQueue` (Project) | 500% | - | 470% |
+
+> **Hinweis:**
+> *   **Write:** Bei Listen entspricht dies `add`, bei Maps `put`. `CopyOnWriteArrayList` ist beim Schreiben extrem teuer, da das gesamte Array kopiert wird.
+> *   **Read:** Bei Listen `get(index)`, bei Maps `get(key)`. `RobustValueIteratorList` ist beim wahlfreien Zugriff langsam wegen des internen Locks.
+> *   **SortedMap:** Das Sortieren (Baumstruktur) kostet signifikant mehr Zeit als Hash-Zugriffe.
+
 ---
 *Messwerte basieren auf JMH Benchmarks (Avg Time, 1000 Elemente).*
