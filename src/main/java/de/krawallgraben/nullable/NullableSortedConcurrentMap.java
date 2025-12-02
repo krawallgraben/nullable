@@ -380,12 +380,10 @@ public class NullableSortedConcurrentMap<K, V>
                         mask(key),
                         (k, oldVal) -> {
                             V oldValue = unmask(oldVal);
-                            V newValue;
                             if (oldValue == null) {
-                                newValue = value;
-                            } else {
-                                newValue = remappingFunction.apply(oldValue, value);
+                                return mask(value);
                             }
+                            V newValue = remappingFunction.apply(oldValue, value);
                             return newValue == null ? null : mask(newValue);
                         }));
     }

@@ -82,7 +82,7 @@ Das Projekt baut ein MRJAR und benötigt mindestens Java 1.8
 <dependency>
 	<groupId>com.github.krawallgraben</groupId>
 	<artifactId>nullable</artifactId>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 </dependency>
 ```
 
