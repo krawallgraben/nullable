@@ -82,17 +82,9 @@ public class ListBenchmark {
     }
 
     // Write (Add) - append to end
-    // Note: CopyOnWriteArrayList will be very slow here.
     @Benchmark
     public void addStdList(org.openjdk.jmh.infra.Blackhole bh) {
-        // We add and then remove to keep size somewhat constant or just add?
-        // Adding indefinitely will cause OOM.
-        // We can just add one element. Benchmarks run repeatedly.
-        // But setup runs once per trial.
-        // Better: create a list inside the benchmark method? No, that measures creation.
-        // We will just add one element at the end.
         stdList.add("new");
-        // Clean up to prevent unlimited growth during measurement
         stdList.remove(stdList.size() - 1);
     }
 
@@ -106,5 +98,24 @@ public class ListBenchmark {
     public void addProjectList(org.openjdk.jmh.infra.Blackhole bh) {
         projectList.add("new");
         projectList.remove(projectList.size() - 1);
+    }
+
+    // Delete (Remove from middle)
+    @Benchmark
+    public void removeStdList(org.openjdk.jmh.infra.Blackhole bh) {
+        stdList.remove(size / 2);
+        stdList.add("value" + (size / 2));
+    }
+
+    @Benchmark
+    public void removeConcurrentList(org.openjdk.jmh.infra.Blackhole bh) {
+        concurrentList.remove(size / 2);
+        concurrentList.add("value" + (size / 2));
+    }
+
+    @Benchmark
+    public void removeProjectList(org.openjdk.jmh.infra.Blackhole bh) {
+        projectList.remove(size / 2);
+        projectList.add("value" + (size / 2));
     }
 }

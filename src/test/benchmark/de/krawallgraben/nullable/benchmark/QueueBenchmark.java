@@ -60,10 +60,6 @@ public class QueueBenchmark {
     }
 
     // Read/Write (Offer/Poll) simulation
-    // Since queues are for processing, we often poll and offer.
-    // pure "get" is usually not supported or is iteration.
-    // We will benchmark offer/poll cycle.
-
     @Benchmark
     public void offerPollStdQueue(org.openjdk.jmh.infra.Blackhole bh) {
         stdQueue.offer("new");
@@ -80,5 +76,25 @@ public class QueueBenchmark {
     public void offerPollProjectQueue(org.openjdk.jmh.infra.Blackhole bh) {
         projectQueue.offer("new");
         bh.consume(projectQueue.poll());
+    }
+
+    // Delete (Remove Object)
+    @Benchmark
+    public void removeStdQueue(org.openjdk.jmh.infra.Blackhole bh) {
+        // Remove an element that exists
+        stdQueue.remove("value0");
+        stdQueue.offer("value0");
+    }
+
+    @Benchmark
+    public void removeConcurrentQueue(org.openjdk.jmh.infra.Blackhole bh) {
+        concurrentQueue.remove("value0");
+        concurrentQueue.offer("value0");
+    }
+
+    @Benchmark
+    public void removeProjectQueue(org.openjdk.jmh.infra.Blackhole bh) {
+        projectQueue.remove("value0");
+        projectQueue.offer("value0");
     }
 }
