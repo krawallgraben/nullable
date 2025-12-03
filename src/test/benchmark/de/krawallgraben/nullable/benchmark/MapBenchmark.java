@@ -91,10 +91,7 @@ public class MapBenchmark {
         }
     }
 
-    // Write (Put) - we use a fresh map or put same keys?
-    // Benchmark 'put' usually modifies state. JMH handles this but for read/write mix it's complex.
-    // We will simulate "put" by overwriting existing keys to avoid resizing overhead dominating.
-
+    // Write (Put)
     @Benchmark
     public void putStdMap(org.openjdk.jmh.infra.Blackhole bh) {
         for (int i = 0; i < size; i++) {
@@ -114,5 +111,24 @@ public class MapBenchmark {
         for (int i = 0; i < size; i++) {
             bh.consume(projectMap.put(keys[i], "newValue"));
         }
+    }
+
+    // Delete (Remove)
+    @Benchmark
+    public void removeStdMap(org.openjdk.jmh.infra.Blackhole bh) {
+        bh.consume(stdMap.remove(keys[0]));
+        bh.consume(stdMap.put(keys[0], values[0]));
+    }
+
+    @Benchmark
+    public void removeConcurrentMap(org.openjdk.jmh.infra.Blackhole bh) {
+        bh.consume(concurrentMap.remove(keys[0]));
+        bh.consume(concurrentMap.put(keys[0], values[0]));
+    }
+
+    @Benchmark
+    public void removeProjectMap(org.openjdk.jmh.infra.Blackhole bh) {
+        bh.consume(projectMap.remove(keys[0]));
+        bh.consume(projectMap.put(keys[0], values[0]));
     }
 }

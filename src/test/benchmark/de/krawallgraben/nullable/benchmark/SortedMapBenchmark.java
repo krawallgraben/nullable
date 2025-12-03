@@ -25,6 +25,7 @@ public class SortedMapBenchmark {
     private SortedMap<String, String> projectMap;
 
     private String[] keys;
+    private String[] values;
 
     @Setup(Level.Trial)
     public void setup() {
@@ -33,13 +34,14 @@ public class SortedMapBenchmark {
         projectMap = new NullableSortedConcurrentMap<>(new ConcurrentSkipListMap<>());
 
         keys = new String[size];
+        values = new String[size];
 
         for (int i = 0; i < size; i++) {
             keys[i] = String.format("%05d", i); // Ensure sorting order
-            String val = "value" + i;
-            stdMap.put(keys[i], val);
-            concurrentMap.put(keys[i], val);
-            projectMap.put(keys[i], val);
+            values[i] = "value" + i;
+            stdMap.put(keys[i], values[i]);
+            concurrentMap.put(keys[i], values[i]);
+            projectMap.put(keys[i], values[i]);
         }
     }
 
@@ -110,5 +112,24 @@ public class SortedMapBenchmark {
         for (int i = 0; i < size; i++) {
             bh.consume(projectMap.put(keys[i], "newValue"));
         }
+    }
+
+    // Delete (Remove)
+    @Benchmark
+    public void removeStdMap(org.openjdk.jmh.infra.Blackhole bh) {
+        bh.consume(stdMap.remove(keys[0]));
+        bh.consume(stdMap.put(keys[0], values[0]));
+    }
+
+    @Benchmark
+    public void removeConcurrentMap(org.openjdk.jmh.infra.Blackhole bh) {
+        bh.consume(concurrentMap.remove(keys[0]));
+        bh.consume(concurrentMap.put(keys[0], values[0]));
+    }
+
+    @Benchmark
+    public void removeProjectMap(org.openjdk.jmh.infra.Blackhole bh) {
+        bh.consume(projectMap.remove(keys[0]));
+        bh.consume(projectMap.put(keys[0], values[0]));
     }
 }
