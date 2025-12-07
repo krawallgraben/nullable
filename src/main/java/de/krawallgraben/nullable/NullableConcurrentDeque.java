@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 @SuppressWarnings("serial")
 public class NullableConcurrentDeque<E> implements Deque<E>, Serializable {
 
+    /** Internal deque that stores masked values. */
     private final ConcurrentLinkedDeque<Object> internalDeque;
 
     /** Placeholder for `null`. */
@@ -39,10 +40,17 @@ public class NullableConcurrentDeque<E> implements Deque<E>, Serializable {
         return value == NullPlaceholder.INSTANCE ? null : (T) value;
     }
 
+    /** Constructs an empty deque. */
     public NullableConcurrentDeque() {
         this.internalDeque = new ConcurrentLinkedDeque<>();
     }
 
+    /**
+     * Constructs a deque containing the elements of the specified collection, in the order they are
+     * returned by the collection's iterator.
+     *
+     * @param c the collection whose elements are to be placed into this deque
+     */
     public NullableConcurrentDeque(Collection<? extends E> c) {
         this.internalDeque = new ConcurrentLinkedDeque<>();
         if (c != null) {
