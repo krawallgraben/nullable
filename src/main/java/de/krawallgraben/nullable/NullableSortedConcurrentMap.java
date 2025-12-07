@@ -32,6 +32,7 @@ import java.util.function.Function;
 public class NullableSortedConcurrentMap<K, V>
         implements ConcurrentNavigableMap<K, V>, Serializable {
 
+    /** Internal map that stores masked keys and values. */
     private final ConcurrentNavigableMap<Object, Object> internalMap;
 
     /** Placeholder for `null`. */
@@ -78,19 +79,42 @@ public class NullableSortedConcurrentMap<K, V>
         }
     }
 
+    /**
+     * Constructs a new, empty map, sorted according to the {@linkplain Comparable natural ordering}
+     * of the keys.
+     */
     public NullableSortedConcurrentMap() {
         this.internalMap = new ConcurrentSkipListMap<>(new NullSafeComparator<>(null));
     }
 
+    /**
+     * Constructs a new, empty map, sorted according to the specified comparator.
+     *
+     * @param comparator the comparator that will be used to order this map. If {@code null}, the
+     *     {@linkplain Comparable natural ordering} of the keys will be used.
+     */
     public NullableSortedConcurrentMap(Comparator<? super K> comparator) {
         this.internalMap = new ConcurrentSkipListMap<>(new NullSafeComparator<>(comparator));
     }
 
+    /**
+     * Constructs a new map containing the same mappings as the given map, sorted according to the
+     * {@linkplain Comparable natural ordering} of the keys.
+     *
+     * @param m the map whose mappings are to be placed in this map
+     */
     public NullableSortedConcurrentMap(Map<? extends K, ? extends V> m) {
         this();
         this.putAll(m);
     }
 
+    /**
+     * Constructs a new map containing the same mappings and using the same ordering as the
+     * specified sorted map.
+     *
+     * @param m the sorted map whose mappings are to be placed in this map, and whose comparator is
+     *     to be used to sort this map
+     */
     public NullableSortedConcurrentMap(SortedMap<K, ? extends V> m) {
         this(m.comparator());
         this.putAll(m);

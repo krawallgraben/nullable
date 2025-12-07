@@ -28,8 +28,16 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
     // Global counter for modifications
     private volatile long modCount = 0;
 
+    /** Constructs an empty list. */
+    public RobustValueIteratorList() {}
+
     // --- High-Performance Write Operations (O(1)) ---
 
+    /**
+     * Appends the specified element to the end of this list.
+     *
+     * @param element element to be appended to this list
+     */
     public void add(T element) {
         rwLock.writeLock().lock();
         try {
@@ -40,6 +48,11 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
         }
     }
 
+    /**
+     * Removes the element at the specified position in this list.
+     *
+     * @param index the index of the element to be removed
+     */
     public void remove(int index) {
         rwLock.writeLock().lock();
         try {
@@ -50,6 +63,12 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
         }
     }
 
+    /**
+     * Returns the element at the specified position in this list.
+     *
+     * @param index index of the element to return
+     * @return the element at the specified position in this list
+     */
     public T get(int index) {
         rwLock.readLock().lock();
         try {
@@ -59,6 +78,11 @@ public class RobustValueIteratorList<T> implements Iterable<T> {
         }
     }
 
+    /**
+     * Returns the number of elements in this list.
+     *
+     * @return the number of elements in this list
+     */
     public int size() {
         rwLock.readLock().lock();
         try {

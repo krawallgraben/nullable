@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @SuppressWarnings("serial")
 public class NullableConcurrentQueue<E> extends AbstractQueue<E> implements Queue<E>, Serializable {
 
+    /** Internal queue that stores masked values. */
     private final ConcurrentLinkedQueue<Object> internalQueue;
 
     /** Placeholder for `null`. */
@@ -39,10 +40,17 @@ public class NullableConcurrentQueue<E> extends AbstractQueue<E> implements Queu
         return value == NullPlaceholder.INSTANCE ? null : (T) value;
     }
 
+    /** Constructs an empty queue. */
     public NullableConcurrentQueue() {
         this.internalQueue = new ConcurrentLinkedQueue<>();
     }
 
+    /**
+     * Constructs a queue containing the elements of the specified collection, in the order they are
+     * returned by the collection's iterator.
+     *
+     * @param c the collection whose elements are to be placed into this queue
+     */
     public NullableConcurrentQueue(Collection<? extends E> c) {
         this.internalQueue = new ConcurrentLinkedQueue<>();
         if (c != null) {

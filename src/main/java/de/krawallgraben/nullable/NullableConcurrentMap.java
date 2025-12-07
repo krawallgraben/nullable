@@ -29,6 +29,7 @@ import java.util.function.Function;
 @SuppressWarnings("serial")
 public class NullableConcurrentMap<K, V> implements ConcurrentMap<K, V>, Serializable {
 
+    /** Internal map that stores masked keys and values. */
     private final ConcurrentHashMap<Object, Object> internalMap;
 
     /** Placeholder for `null`. */
@@ -50,23 +51,60 @@ public class NullableConcurrentMap<K, V> implements ConcurrentMap<K, V>, Seriali
         return value == NullPlaceholder.INSTANCE ? null : (T) value;
     }
 
+    /** Creates a new, empty map with the default initial table size (16). */
     public NullableConcurrentMap() {
         this.internalMap = new ConcurrentHashMap<>();
     }
 
+    /**
+     * Creates a new, empty map with an initial table size accommodating the specified number of
+     * elements without the need to dynamically resize.
+     *
+     * @param initialCapacity The implementation performs internal sizing to accommodate this many
+     *     elements.
+     * @throws IllegalArgumentException if the initial capacity of elements is negative
+     */
     public NullableConcurrentMap(int initialCapacity) {
         this.internalMap = new ConcurrentHashMap<>(initialCapacity);
     }
 
+    /**
+     * Creates a new map with the same mappings as the given map.
+     *
+     * @param m the map
+     */
     public NullableConcurrentMap(Map<? extends K, ? extends V> m) {
         this.internalMap = new ConcurrentHashMap<>();
         this.putAll(m);
     }
 
+    /**
+     * Creates a new, empty map with an initial table size based on the given number of elements
+     * (`initialCapacity`) and initial table density (`loadFactor`).
+     *
+     * @param initialCapacity the initial capacity. The implementation performs internal sizing to
+     *     accommodate this many elements, given the specified load factor.
+     * @param loadFactor the load factor (table density) for establishing the initial table size
+     * @throws IllegalArgumentException if the initial capacity of elements is negative or the load
+     *     factor is nonpositive
+     */
     public NullableConcurrentMap(int initialCapacity, float loadFactor) {
         this.internalMap = new ConcurrentHashMap<>(initialCapacity, loadFactor);
     }
 
+    /**
+     * Creates a new, empty map with an initial table size based on the given number of elements
+     * (`initialCapacity`), table density (`loadFactor`), and number of concurrently updating
+     * threads (`concurrencyLevel`).
+     *
+     * @param initialCapacity the initial capacity. The implementation performs internal sizing to
+     *     accommodate this many elements, given the specified load factor.
+     * @param loadFactor the load factor (table density) for establishing the initial table size
+     * @param concurrencyLevel the estimated number of concurrently updating threads. The
+     *     implementation may use this value as a sizing hint.
+     * @throws IllegalArgumentException if the initial capacity is negative or the load factor or
+     *     concurrencyLevel are nonpositive
+     */
     public NullableConcurrentMap(int initialCapacity, float loadFactor, int concurrencyLevel) {
         this.internalMap = new ConcurrentHashMap<>(initialCapacity, loadFactor, concurrencyLevel);
     }
